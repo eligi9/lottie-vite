@@ -3,8 +3,13 @@ import "@lottiefiles/lottie-player";
 import { create } from "@lottiefiles/lottie-interactivity";
 import Animation from "../assets/Schwebeball.json";
 
+
+/**
+ * @throws Error: handleLoad is not called through event "load"
+ * Try -> componentDidMount
+ */
 const Click = () => {
-  const myRef = useRef<any>(null);
+  const clickRef = useRef<any>(null);
 
   useEffect(() => {
     const handleLoad = () => {
@@ -18,27 +23,31 @@ const Click = () => {
           },
         ],
       });
-
       console.log("Lottie loaded");
     };
 
+    handleLoad();
+
+    /*
     // Füge den Event Listener für das Load-Ereignis hinzu
-    if (myRef.current) {
-      myRef.current.addEventListener("ready", handleLoad);
+    
+    if (clickRef.current) {
+      clickRef.current.addEventListener("load", handleLoad);
     }
 
     // Aufräumen: Entferne den Event Listener, wenn die Komponente unmontiert wird
     return () => {
-      if (myRef.current) {
-        myRef.current.removeEventListener("ready", handleLoad);
+      if (clickRef.current) {
+        clickRef.current.removeEventListener("load", handleLoad);
       }
     };
+    */
   }, []);
 
   return (
     <div onClick={() => {}}>
       <lottie-player
-        ref={myRef}
+        ref={clickRef}
         id="clickLottie"
         src={JSON.stringify(Animation)}
         style={{ width: "600px", height: "600px" }}
