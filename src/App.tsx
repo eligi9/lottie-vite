@@ -20,6 +20,7 @@ function App() {
         <h1>Lottie-React</h1>
         <Example />
       </div>
+
       <div
         style={{
           height: "100vh",
@@ -30,7 +31,7 @@ function App() {
           alignItems: "center",
         }}
       >
-        <h1>Lottie-Player</h1>
+        <h1>Lottie-Interactivity-Player</h1>
         <LottiePlayer />
       </div>
 
