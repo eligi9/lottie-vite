@@ -1,11 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef} from "react";
 import "@lottiefiles/lottie-player";
-import { create } from "@lottiefiles/lottie-interactivity";
-import Animation from "../assets/Schwebeball.json";
 
 interface HorizontalScrollProps {
   scrollPosition: number;
-  parallaxWidth: number;
+  containerWidth: number;
+  animationData: string;
+  id: string;
+  start: number;
+  duration: number;
 }
 
 /**
@@ -13,60 +15,75 @@ interface HorizontalScrollProps {
  * Try -> componentDidMount
  */
 const HorizontalScroll = (props: HorizontalScrollProps) => {
-  const clickRef = useRef<any>(null);
+  const playerRef = useRef<any>(null);
+  const totalFrames = useRef<number>(0);
+  const playProps = useRef<any>(null);
+  const playerMiddle = useRef<number>(0);
+  const offsetStart = useRef<number>(window.innerWidth * props.start);
+  const offsetEnd = useRef<number>(
+    window.innerWidth * (1 - (props.start + props.duration))
+  );
 
-  const mapValueToRange = (value: number, inMin: number, inMax: number, outMin: number, outMax: number): number => {
-    return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+  const getSeekFrame = (scrollPosition: number): number => {
+    if (playerIsVisible(scrollPosition)) {
+      let seekFrame =
+        (scrollPosition - (playerMiddle.current + offsetStart.current - window.innerWidth)) /
+        (window.innerWidth * props.duration);
+      return Math.round(seekFrame * totalFrames.current);
+    } else {
+      return 0;
+    }
   };
-  
+
+  const playerIsVisible = (scrollPosition: number): boolean => {
+    if (
+      scrollPosition + window.innerWidth > playerMiddle.current + offsetStart.current &&
+      scrollPosition <= Math.abs(playerMiddle.current - offsetEnd.current)
+    ) {
+      console.log("playerIsVisible");
+      return true;
+    } else {
+      console.log("playerIsNotVisible");
+      return false;
+    }
+  };
 
   useEffect(() => {
-    const handleLoad = () => {
 
-      //console.log(props.scrollPosition)
-      /** HORIZONTALER SCROLL
-       * Option 1 - LottiInteractive: Man könnte mit redefineOptions() die Animation neu definieren, um sie horizontal scrollbar zu machen
-       * Option 2 - LottiPlayer: Man könnte die horizontale scroll position indezieren und auf seek() mappen
-       */
-      // Option 2
-      if (clickRef.current) {
-        const normalizedScrollPosition = mapValueToRange(props.scrollPosition, 0, props.parallaxWidth, 0, 100);
-        const percentage = `${Math.round(normalizedScrollPosition)}%`;
-        console.log(percentage)
-        clickRef.current.seek(percentage);
+    //store Frame Count of the Animation in totalFrames
+    totalFrames.current = playerRef.current.getLottie().totalFrames;
+
+    //get the offset of the player and BoundingProps
+    let player = document.getElementById(props.id);
+    if (player) {
+      playProps.current = player.getBoundingClientRect();
+      playerMiddle.current = playProps.current.x + playProps.current.width / 2;
+      if (playerMiddle.current > window.innerWidth) {
+        playerRef.current.seek(1);
       }
+    }
+  }, [props.containerWidth]);
 
-      /*
-      create({
-        mode: 'scroll',
-        player: '#horizonralScrollLottie',
-        container: "#relativeContainer",
-        actions: [
-          {
-            visibility: [0, 1],
-            type: 'seek',
-            frames: [0, 100],
-          },
-        ],
-      });
-      */
+  //Seek to the frame of the animation that is relative to the scroll position
+  useEffect(() => {
+    const handleLoad = () => {
+      if (playerRef.current) {
+        let seekFrame = getSeekFrame(props.scrollPosition);
+        console.log("MySEEK: " + seekFrame);
+        playerRef.current.seek(seekFrame);
+      }
     };
 
     handleLoad();
   }, [props.scrollPosition]);
 
   return (
-    <div>
-      <lottie-player
-        ref={clickRef}
-        id="horizonralScrollLottie"
-        src={JSON.stringify(Animation)}
-        style={{ width: "600px", height: "600px" }}
-      ></lottie-player>
-      <div id="relativeContainer">
-      Only working in y - Scroll Realtive to this containter
-      </div>
-    </div>
+    <lottie-player
+      ref={playerRef}
+      id={props.id}
+      src={props.animationData}
+      style={{ width: "600px", height: "600px" }}
+    ></lottie-player>
   );
 };
 
